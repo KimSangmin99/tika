@@ -11,10 +11,6 @@
 # testing
 /coverage
 
-# drizzle
-/drizzle/*.sql
-!/drizzle/.gitkeep
-
 # env
 .env
 .env*.local
