@@ -12,6 +12,10 @@ const compat = new FlatCompat({
 // CLAUDE.md / docs/TRD.md §4 경계 규칙:
 // src/client ↔ src/server 상호 import 금지, 공유는 src/shared를 통해서만.
 const eslintConfig = [
+  {
+    // 생성물·빌드 산출물은 린트 대상이 아니다 (flat config는 node_modules 외에는 자동 제외하지 않음)
+    ignores: ['.next/**', 'out/**', 'build/**', 'coverage/**', 'drizzle/**', 'next-env.d.ts'],
+  },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
     files: ['src/client/**/*.ts', 'src/client/**/*.tsx'],
