@@ -8,6 +8,7 @@ import {
   timestamp,
   index,
 } from 'drizzle-orm/pg-core';
+import type { TicketPriority, TicketStatus } from '@/shared/types';
 
 // docs/DATA_MODEL.md §3 Drizzle 스키마 정의
 export const tickets = pgTable(
@@ -16,8 +17,13 @@ export const tickets = pgTable(
     id: serial('id').primaryKey(),
     title: varchar('title', { length: 200 }).notNull(),
     description: text('description'),
-    status: varchar('status', { length: 20 }).notNull().default('BACKLOG'),
-    priority: varchar('priority', { length: 10 }).notNull().default('MEDIUM'),
+    // DB는 ENUM 대신 VARCHAR를 쓰지만(docs/DATA_MODEL.md §2), 애플리케이션에서는 좁은 union으로
+    // 다루도록 $type으로 표기한다. 타입 전용 표기라 생성되는 SQL은 달라지지 않는다.
+    status: varchar('status', { length: 20 }).$type<TicketStatus>().notNull().default('BACKLOG'),
+    priority: varchar('priority', { length: 10 })
+      .$type<TicketPriority>()
+      .notNull()
+      .default('MEDIUM'),
     position: integer('position').notNull().default(1),
     plannedStartDate: date('planned_start_date', { mode: 'string' }),
     dueDate: date('due_date', { mode: 'string' }),
