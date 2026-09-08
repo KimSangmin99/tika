@@ -67,7 +67,7 @@
 | description | string | X | 최대 1000자 | null | 상세 설명 |
 | priority | string | X | LOW \| MEDIUM \| HIGH | MEDIUM | 우선순위 |
 | plannedStartDate | string | X | YYYY-MM-DD | null | 시작예정일 |
-| dueDate | string | X | YYYY-MM-DD, 오늘 이후 | null | 종료예정일 |
+| dueDate | string | X | YYYY-MM-DD, 오늘부터 (오늘 포함) | null | 종료예정일 |
 
 ```json
 {
@@ -239,7 +239,7 @@
 | description | string \| null | 최대 1000자. null이면 삭제 | 설명 변경 |
 | priority | string | LOW \| MEDIUM \| HIGH | 우선순위 변경 |
 | plannedStartDate | string \| null | YYYY-MM-DD. null이면 삭제 | 시작예정일 변경 |
-| dueDate | string \| null | YYYY-MM-DD, 오늘 이후. null이면 삭제 | 종료예정일 변경 |
+| dueDate | string \| null | YYYY-MM-DD, 오늘부터 (오늘 포함). null이면 삭제 | 종료예정일 변경 |
 
 ```json
 {
