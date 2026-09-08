@@ -1,7 +1,9 @@
+import { config } from 'dotenv';
 import { defineConfig } from 'drizzle-kit';
 
-// 스키마 소스 파일(src/server/db/schema.ts)은 아직 존재하지 않는다.
-// TDD Green 단계에서 DATA_MODEL.md 정의에 따라 작성한 뒤 db:generate/db:migrate를 실행한다.
+// drizzle-kit CLI는 Next.js와 달리 .env.local을 자동으로 읽지 않으므로 직접 로드한다.
+config({ path: '.env.local' });
+
 export default defineConfig({
   schema: './src/server/db/schema.ts',
   out: './drizzle',
