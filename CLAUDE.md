@@ -5,32 +5,41 @@ Tika는 티켓 기반 칸반 보드 TODO 앱이다 (단일 사용자 MVP).
 Next.js App Router 기반으로, 프론트엔드와 백엔드를 디렉토리 수준에서 분리한다.
 src/shared/에서 타입과 검증 스키마를 공유한다.
 
-> **현재 상태: 구현 전 (docs-only)**. `package.json`, `app/`, `src/` 등 실제 코드는 아직 없고
-> `docs/`의 명세 문서만 존재한다. 코드를 처음 만들 때는 `docs/TRD.md` 1.3절의 디렉터리 구조와
-> 아래 "프로젝트 구조"를 그대로 따른다. 빌드/린트/테스트 명령은 README.md에 예정된 형태로만
-> 문서화되어 있으며(`npm run dev`, `npm run test` 등), scaffold가 없으므로 아직 실행되지 않는다.
+> **현재 상태: 백엔드 구현 진행 중 (TDD)**. scaffold(`package.json`, `app/`, `src/`, 설정 파일)는
+> 완료됐고, 로컬 Postgres(`tika_dev`/`tika_test`)에 마이그레이션도 적용돼 있다. FR-001(티켓 생성,
+> `POST /api/tickets`)은 TC-API-001 기준 TDD Red→Green으로 이미 구현·테스트 완료됐다. 나머지
+> FR-002~008은 `docs/TEST_CASES.md`의 TC-API 순서대로 아래 "SDD 워크플로 규칙"과 TDD 사이클을
+> 함께 적용해 진행한다.
 
 ## 프로젝트 구조
 - app/api/       : 백엔드 진입점 (Route Handlers, 요청 파싱 + 응답만)
+- app/(board)/   : 프론트엔드 페이지 그룹 (Chapter 6에서 TDD로 작성 예정)
 - src/server/    : 백엔드 로직 (services, db, middleware)
 - src/client/    : 프론트엔드 로직 (components, hooks, api 호출)
 - src/shared/    : 공유 타입, Zod 스키마, 상수
 - __tests__/     : Jest + RTL 테스트 (api/services/components/hooks 계층별 분리)
-- docs/          : 프로젝트 명세 문서
+- drizzle/       : Drizzle Kit이 생성한 마이그레이션 SQL (커밋 대상)
+- docs/          : 프로젝트 명세 문서 (PRD/TRD/REQUIREMENTS/API_SPEC/DATA_MODEL/COMPONENT_SPEC/TEST_CASES) — **기능 명세의 단일 소스**
+- specs/         : spec-kit(SDD)이 `/speckit-specify` 실행 시 생성하는 `<NNN>-<feature>/{spec,plan,tasks}.md`. docs/를 대체하지 않고, docs/ 내용을 절차적으로 재확인·세분화하는 산출물
+- .specify/      : spec-kit 템플릿·스크립트·constitution (`memory/constitution.md`)
+- .claude/skills/: spec-kit이 설치한 `/speckit-*` 스킬
 
 ## 기술 스택
 - Framework: Next.js 15 (App Router)
 - Language: TypeScript (strict mode)
 - Frontend: React 19
-- Styling: Tailwind CSS 4
+- Styling: Tailwind CSS 4 (`app/globals.css`의 `@import "tailwindcss"` + `app/layout.tsx`)
 - Drag & Drop: @dnd-kit/core + @dnd-kit/sortable
 - ORM: Drizzle ORM
-- DB: Vercel Postgres (Neon)
+- DB: Vercel Postgres (Neon) — **로컬/테스트는 `pg`(node-postgres) + `drizzle-orm/node-postgres` 사용**.
+  `@vercel/postgres`는 Neon 전용 HTTP 프로토콜이라 로컬 Postgres에 접속 불가해 대체함
+  (`src/server/db/index.ts` 참조). 실제 Vercel/Neon 배포 시에는 원래 스택으로 교체 검토 필요.
 - Validation: Zod
 - Testing: Jest + React Testing Library
 - Deployment: Vercel
+- SDD 도구: spec-kit (`specify` CLI, `/speckit-*` 스킬) — docs/ 기반 개발 절차를 보조하는 워크플로 레이어
 
-## 프로젝트 문서 (반드시 참조)
+## 프로젝트 문서 (반드시 참조 — 기능 명세의 단일 소스)
 - 제품 요구사항: /docs/PRD.md
 - 기술 요구사항: /docs/TRD.md
 - 상세 요구사항: /docs/REQUIREMENTS.md
@@ -38,6 +47,9 @@ src/shared/에서 타입과 검증 스키마를 공유한다.
 - 데이터 모델: /docs/DATA_MODEL.md
 - 컴포넌트 명세: /docs/COMPONENT_SPEC.md
 - 테스트 케이스: /docs/TEST_CASES.md
+- SDD 산출물(보조): /specs/<NNN>-<feature>/{spec,plan,tasks}.md, /.specify/memory/constitution.md
+  — docs/와 내용이 어긋나면 **docs/가 우선**한다. specs/는 docs/를 절차적으로 세분화한 것이지
+  새로운 명세 소스가 아니다.
 
 ## 아키텍처: 요청 처리 흐름
 모든 요청은 4단계 계층을 순서대로만 통과한다 (계층 건너뛰기 금지, 상세: TRD.md 1.2절).
@@ -126,14 +138,46 @@ DB에 저장하지 않는 파생 로직과 자동 필드 관리는 서비스 계
 - 테스트와 구현을 한 번에 작성하지 말 것 — 반드시 단계별로 진행
 - 테스트 실패 시 구현을 수정할 것, 테스트를 수정하지 말 것 (명세 오류인 경우 명세 먼저 수정)
 
-## 예정된 명령어 (scaffold 이후 사용 가능, README.md 기준)
-| 명령어 | 설명 |
-|--------|------|
-| `npm run dev` | 개발 서버 실행 |
-| `npm run build` | 프로덕션 빌드 |
-| `npm run test` | 테스트 실행 |
-| `npm run test:watch` | 테스트 감시 모드 |
-| `npm run db:generate` / `db:migrate` | Drizzle 마이그레이션 생성/적용 |
-| `npm run db:studio` | Drizzle Studio (DB GUI) |
-| `npm run db:seed` | 시드 데이터 삽입 (docs/DATA_MODEL.md 6절 참조) |
-| `npm run lint` / `npm run format` | ESLint / Prettier |
+## SDD 워크플로 규칙
+
+spec-kit(`/speckit-*`)은 **docs/를 대체하지 않고, docs/를 입력으로 삼아 진행 절차를 강제하는 레이어**다.
+docs/*.md가 이미 다루는 FR-001~FR-008 범위 안에서는 아래 순서를 참고 절차로만 쓰고, docs/의 내용과
+충돌하면 항상 docs/가 우선한다. TDD 사이클 규칙(위)은 SDD 절차와 별개로 계속 그대로 적용된다 —
+`/speckit-implement` 단계도 Red→Green→Refactor를 건너뛰지 않는다.
+
+### 절차 순서
+1. `/speckit-constitution` — 프로젝트 원칙 수립/갱신. Tika는 이 CLAUDE.md와 `docs/TRD.md` §4
+   경계 규칙, TDD 사이클 규칙을 constitution의 핵심 원칙으로 반영한다.
+2. `/speckit-specify` — 새 기능(또는 기존 FR의 세분화)에 대해 `specs/<NNN>-<feature>/spec.md` 생성.
+   입력은 반드시 `docs/PRD.md`·`docs/REQUIREMENTS.md`의 해당 FR/US를 근거로 작성하고, 새 요구사항을
+   임의로 추가하지 않는다.
+3. `/speckit-clarify` (선택) — `/speckit-plan` 이전에 모호한 부분을 질문으로 해소.
+4. `/speckit-plan` — `plan.md` 생성. "아키텍처: 요청 처리 흐름"(4단계 계층)과 경계 규칙을 반드시
+   따르며, `docs/API_SPEC.md`/`docs/DATA_MODEL.md`의 계약을 그대로 재사용한다(새 계약 임의 정의 금지).
+5. `/speckit-tasks` — `tasks.md` 생성. 가능한 경우 `docs/TEST_CASES.md`의 TC-API/TC-COMP/TC-INT
+   ID에 매핑해 작성하고, 이미 있는 테스트 케이스를 중복 정의하지 않는다.
+6. `/speckit-analyze`, `/speckit-checklist` (선택) — plan/tasks 생성 후, 구현 전 정합성·완결성 점검.
+7. `/speckit-implement` — tasks.md를 실행하되, 각 태스크 내부에서는 TDD 사이클 규칙(Red→Green→Refactor)을
+   그대로 적용한다.
+8. `/speckit-converge` — 구현 완료 후 코드베이스와 spec/plan/tasks를 대조해 누락된 작업을 tasks.md에
+   추가한다.
+
+### 원칙
+- docs/에 이미 명세된 FR(예: FR-001~008)은 `/speckit-specify`로 다시 만들지 않는다 — 필요하면
+  기존 docs/ 문서를 먼저 수정한다.
+- `specs/`, `.specify/memory/constitution.md`는 커밋 대상이며, `.claude/`는 자격 증명이 담길 수
+  있으므로 `.gitignore` 처리 여부를 별도로 확인한다.
+- SDD 절차 도입이 "새 기능 구현 전 TEST_CASES.md의 해당 테스트부터 작성" 같은 기존 개발 규칙을
+  약화시키지 않는다 — SDD는 그 규칙을 지키기 위한 절차적 뼈대일 뿐이다.
+
+## 주요 명령어 (README.md 기준)
+| 명령어 | 설명 | 상태 |
+|--------|------|------|
+| `npm run dev` | 개발 서버 실행 | 확인됨 |
+| `npm run build` | 프로덕션 빌드 | 확인됨 |
+| `npm run test` / `test:watch` | 테스트 실행 / 감시 모드 | 확인됨 (6/6 통과) |
+| `npm run db:generate` / `db:migrate` | Drizzle 마이그레이션 생성/적용 | 확인됨 (`.env.local` 자동 로드하도록 `drizzle.config.ts` 수정됨) |
+| `npm run lint` | ESLint | 확인됨 (경계 규칙 포함, 클린) |
+| `npm run db:studio` | Drizzle Studio (DB GUI) | 미확인 |
+| `npm run db:seed` | 시드 데이터 삽입 (docs/DATA_MODEL.md 6절 참조) | **미구현** — `src/server/db/seed.ts` 파일 자체가 아직 없음 |
+| `npm run format` / `format:check` | Prettier | 동작은 하나, 현재 31개 파일(주로 docs/*.md, 설정 파일)이 미포맷 상태 — 별도로 정리 필요 |
