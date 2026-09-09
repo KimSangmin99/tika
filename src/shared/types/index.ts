@@ -18,6 +18,13 @@ export const TICKET_PRIORITY = {
 
 export type TicketPriority = (typeof TICKET_PRIORITY)[keyof typeof TICKET_PRIORITY];
 
+export const COLUMN_ORDER: TicketStatus[] = [
+  TICKET_STATUS.BACKLOG,
+  TICKET_STATUS.TODO,
+  TICKET_STATUS.IN_PROGRESS,
+  TICKET_STATUS.DONE,
+];
+
 export interface Ticket {
   id: number;
   title: string;
@@ -32,3 +39,13 @@ export interface Ticket {
   createdAt: Date;
   updatedAt: Date;
 }
+
+/** 보드 조회 응답용 — isOverdue는 DB에 저장하지 않는 파생 필드 */
+export interface TicketWithMeta extends Ticket {
+  isOverdue: boolean;
+}
+
+export type BoardData = Record<TicketStatus, TicketWithMeta[]>;
+
+/** reorder는 DONE을 허용하지 않는다 — Done 이동은 /complete 사용 */
+export type ReorderableStatus = Exclude<TicketStatus, typeof TICKET_STATUS.DONE>;

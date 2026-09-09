@@ -1,5 +1,11 @@
 import { createTicketSchema } from '@/shared/validations/ticket';
-import { create } from '@/server/services/ticketService';
+import { create, getBoard } from '@/server/services/ticketService';
+
+export async function GET() {
+  const board = await getBoard();
+
+  return Response.json(board, { status: 200 });
+}
 
 export async function POST(request: Request) {
   const json = await request.json();

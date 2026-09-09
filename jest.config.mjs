@@ -40,6 +40,9 @@ const config = async () => {
 
   return {
     projects: [server, client],
+    // API 테스트는 실제 Postgres(tika_test)를 공유한다. GET /api/tickets처럼 테이블 전체를
+    // 조회하는 테스트가 다른 테스트 파일이 삽입한 행에 오염되지 않도록 직렬 실행한다.
+    maxWorkers: 1,
   };
 };
 
