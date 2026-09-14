@@ -44,11 +44,15 @@ export const TicketForm = ({
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
-    // 빈 선택 필드는 전송하지 않는다 (priority는 select라 항상 값이 있다)
+    // priority는 select라 항상 값이 있다.
     const payload: Record<string, unknown> = { title, priority };
-    if (description !== '') payload.description = description;
-    if (plannedStartDate !== '') payload.plannedStartDate = plannedStartDate;
-    if (dueDate !== '') payload.dueDate = dueDate;
+
+    // 생성 모드: 빈 선택 필드는 전송하지 않는다.
+    // 수정 모드: 비운 필드는 null로 보내 "값 삭제"를 요청한다 (docs/API_SPEC.md §4).
+    for (const [field, value] of Object.entries({ description, plannedStartDate, dueDate })) {
+      if (value !== '') payload[field] = value;
+      else if (mode === 'edit') payload[field] = null;
+    }
 
     // 백엔드와 동일한 스키마로 검증한다 (docs/TRD.md §1.2 — 프론트 1차 검증)
     const schema = mode === 'create' ? createTicketSchema : updateTicketSchema;
