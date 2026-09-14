@@ -12,6 +12,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { resolveDragEnd, type DropTargetId } from '@/client/hooks/boardDnd';
+import { applyFilter, countFilterMatches, type BoardFilter } from '@/client/hooks/boardFilter';
 import { useTickets } from '@/client/hooks/useTickets';
 import type { BoardData, TicketWithMeta } from '@/shared/types';
 import type { CreateTicketInput, UpdateTicketInput } from '@/shared/validations/ticket';
@@ -20,6 +21,7 @@ import { TicketModal } from '../ticket/TicketModal';
 import { Board } from './Board';
 import { TicketCard } from './TicketCard';
 import { BoardHeader } from './BoardHeader';
+import { FilterBar } from './FilterBar';
 
 type BoardContainerProps = {
   initialData: BoardData;
@@ -33,6 +35,7 @@ export const BoardContainer = ({ initialData }: BoardContainerProps) => {
   const [isCreating, setIsCreating] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [activeTicketId, setActiveTicketId] = useState<number | null>(null);
+  const [activeFilter, setActiveFilter] = useState<BoardFilter>('all');
 
   // 클릭과 드래그를 구분한다 — 8px 이상 움직여야 드래그로 본다
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
@@ -67,6 +70,11 @@ export const BoardContainer = ({ initialData }: BoardContainerProps) => {
           .flat()
           .find((ticket) => ticket.id === activeTicketId) ?? null);
 
+  // 필터는 "보여주는 것"에만 적용한다. 드롭 판정과 모달 조회는 항상 전체 보드를
+  // 기준으로 해야 필터로 가려진 티켓의 위치 계산이 어긋나지 않는다.
+  const visibleBoard = applyFilter(board, activeFilter);
+  const filterCounts = countFilterMatches(board);
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveTicketId(Number(event.active.id));
   };
@@ -88,6 +96,12 @@ export const BoardContainer = ({ initialData }: BoardContainerProps) => {
   return (
     <div className="flex flex-col gap-4 p-4">
       <BoardHeader onCreateClick={() => setIsCreating(true)} />
+
+      <FilterBar
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        counts={filterCounts}
+      />
 
       {error && (
         <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -114,7 +128,7 @@ export const BoardContainer = ({ initialData }: BoardContainerProps) => {
         onDragEnd={handleDragEnd}
       >
         <Board
-          board={board}
+          board={visibleBoard}
           sortable
           onTicketClick={(ticket) => setSelectedTicketId(ticket.id)}
           overlay={

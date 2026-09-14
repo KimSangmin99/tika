@@ -147,3 +147,55 @@ describe('BoardContainer', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('제목을 입력해주세요');
   });
 });
+
+describe('BoardContainer — 필터 (COMPONENT_SPEC §2.3)', () => {
+  test('"일정 초과" 필터를 누르면 오버듀 티켓만 남는다', async () => {
+    render(
+      <BoardContainer
+        initialData={makeBoard({
+          TODO: [
+            makeTicket({ id: 1, title: '지연 건', status: 'TODO', isOverdue: true }),
+            makeTicket({ id: 2, title: '정상 건', status: 'TODO', isOverdue: false }),
+          ],
+        })}
+      />
+    );
+
+    expect(screen.getByText('정상 건')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /일정 초과/ }));
+
+    expect(screen.getByText('지연 건')).toBeInTheDocument();
+    expect(screen.queryByText('정상 건')).not.toBeInTheDocument();
+  });
+
+  test('필터를 걸어도 Backlog는 전체가 유지된다', async () => {
+    render(
+      <BoardContainer
+        initialData={makeBoard({
+          BACKLOG: [makeTicket({ id: 1, title: '백로그 건', status: 'BACKLOG', isOverdue: false })],
+        })}
+      />
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /일정 초과/ }));
+
+    expect(screen.getByText('백로그 건')).toBeInTheDocument();
+  });
+
+  test('활성 필터를 다시 누르면 전체 보기로 돌아온다', async () => {
+    render(
+      <BoardContainer
+        initialData={makeBoard({
+          TODO: [makeTicket({ id: 2, title: '정상 건', status: 'TODO', isOverdue: false })],
+        })}
+      />
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /일정 초과/ }));
+    expect(screen.queryByText('정상 건')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /일정 초과/ }));
+    expect(screen.getByText('정상 건')).toBeInTheDocument();
+  });
+});
