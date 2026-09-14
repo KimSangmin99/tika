@@ -24,3 +24,16 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# GSD Core (npx @opengsd/gsd-core@latest --local --claude 로 재설치)
+# 생성 파일 266개에 머신 고유 절대경로가 하드코딩돼 있어 커밋 대상에서 제외한다.
+/.claude/agents/
+/.claude/commands/
+/.claude/gsd-core/
+/.claude/hooks/
+/.claude/scripts/
+/.claude/gsd-migration-journal/
+/.claude/gsd-file-manifest.json
+/.claude/gsd-install-state.json
+/.claude/.gsd-profile
+/.claude/settings.local.json
