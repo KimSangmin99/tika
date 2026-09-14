@@ -14,7 +14,18 @@ const compat = new FlatCompat({
 const eslintConfig = [
   {
     // 생성물·빌드 산출물은 린트 대상이 아니다 (flat config는 node_modules 외에는 자동 제외하지 않음)
-    ignores: ['.next/**', 'out/**', 'build/**', 'coverage/**', 'drizzle/**', 'next-env.d.ts'],
+    ignores: [
+      '.next/**',
+      'out/**',
+      'build/**',
+      'coverage/**',
+      'drizzle/**',
+      'next-env.d.ts',
+      // 설치된 스킬·GSD 생성물은 서드파티 산출물이라 우리 코드 규칙을 적용하지 않는다
+      // (원본 수정 금지 대상이기도 하다)
+      '.claude/**',
+      '.specify/**',
+    ],
   },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
