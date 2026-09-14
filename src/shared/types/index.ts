@@ -18,6 +18,13 @@ export const TICKET_PRIORITY = {
 
 export type TicketPriority = (typeof TICKET_PRIORITY)[keyof typeof TICKET_PRIORITY];
 
+export const COLUMN_LABELS: Record<TicketStatus, string> = {
+  BACKLOG: 'Backlog',
+  TODO: 'TODO',
+  IN_PROGRESS: 'In Progress',
+  DONE: 'Done',
+};
+
 export const COLUMN_ORDER: TicketStatus[] = [
   TICKET_STATUS.BACKLOG,
   TICKET_STATUS.TODO,
