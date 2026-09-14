@@ -26,6 +26,9 @@ const clientProjectConfig = {
   testMatch: [
     '<rootDir>/__tests__/components/**/*.test.tsx',
     '<rootDir>/__tests__/hooks/**/*.test.ts',
+    '<rootDir>/__tests__/hooks/**/*.test.tsx',
+    // src/client/api (fetch 래퍼) 테스트 — 브라우저 환경 기준
+    '<rootDir>/__tests__/client/**/*.test.ts',
   ],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper,
