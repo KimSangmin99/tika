@@ -1,9 +1,14 @@
+import type { ReactNode } from 'react';
 import { TICKET_STATUS, type BoardData, type TicketStatus, type TicketWithMeta } from '@/shared/types';
 import { Column } from './Column';
 
 type BoardProps = {
   board: BoardData;
   onTicketClick?: (ticket: TicketWithMeta) => void;
+  /** DnD를 켤 때 BoardContainer가 DndContext로 감싸 전달한다 */
+  sortable?: boolean;
+  /** DragOverlay 등 보드 위에 겹쳐 그릴 요소 */
+  overlay?: ReactNode;
 };
 
 // docs/COMPONENT_SPEC.md §1 — Backlog는 사이드바, 나머지 3개는 메인 영역 그리드
@@ -13,13 +18,14 @@ const MAIN_COLUMNS: TicketStatus[] = [
   TICKET_STATUS.DONE,
 ];
 
-export const Board = ({ board, onTicketClick }: BoardProps) => (
+export const Board = ({ board, onTicketClick, sortable = false, overlay }: BoardProps) => (
   <div data-testid="board" className="flex flex-col gap-4 lg:flex-row">
     <aside data-testid="backlog-sidebar" className="w-full lg:w-72 lg:shrink-0">
       <Column
         status={TICKET_STATUS.BACKLOG}
         tickets={board[TICKET_STATUS.BACKLOG]}
         onTicketClick={onTicketClick}
+        sortable={sortable}
       />
     </aside>
 
@@ -33,8 +39,11 @@ export const Board = ({ board, onTicketClick }: BoardProps) => (
           status={status}
           tickets={board[status]}
           onTicketClick={onTicketClick}
+          sortable={sortable}
         />
       ))}
     </div>
+
+    {overlay}
   </div>
 );

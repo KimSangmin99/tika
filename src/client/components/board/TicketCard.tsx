@@ -1,9 +1,13 @@
 import type { KeyboardEvent } from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { TICKET_PRIORITY, TICKET_STATUS, type TicketPriority, type TicketWithMeta } from '@/shared/types';
 
 type TicketCardProps = {
   ticket: TicketWithMeta;
   onClick?: () => void;
+  /** DndContext 밖(단위 테스트 등)에서는 드래그를 끈다 */
+  sortable?: boolean;
 };
 
 // docs/COMPONENT_SPEC.md §2.6 — LOW 회색, MEDIUM 파란색, HIGH 빨간색
@@ -13,8 +17,9 @@ const PRIORITY_BADGE_CLASS: Record<TicketPriority, string> = {
   [TICKET_PRIORITY.HIGH]: 'bg-red-100 text-red-700',
 };
 
-export const TicketCard = ({ ticket, onClick }: TicketCardProps) => {
+export const TicketCard = ({ ticket, onClick, sortable = false }: TicketCardProps) => {
   const isDone = ticket.status === TICKET_STATUS.DONE;
+  const drag = useSortable({ id: ticket.id, disabled: !sortable });
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -25,6 +30,14 @@ export const TicketCard = ({ ticket, onClick }: TicketCardProps) => {
 
   return (
     <div
+      ref={sortable ? drag.setNodeRef : undefined}
+      style={
+        sortable
+          ? { transform: CSS.Transform.toString(drag.transform), transition: drag.transition }
+          : undefined
+      }
+      {...(sortable ? drag.attributes : {})}
+      {...(sortable ? drag.listeners : {})}
       data-testid="ticket-card"
       data-done={String(isDone)}
       role="button"
@@ -37,6 +50,7 @@ export const TicketCard = ({ ticket, onClick }: TicketCardProps) => {
         'cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500',
         ticket.isOverdue ? 'border-red-500' : 'border-gray-200',
         isDone ? 'opacity-60 line-through' : '',
+        drag.isDragging ? 'opacity-50 shadow-lg' : '',
       ].join(' ')}
     >
       <p data-testid="ticket-title" className="truncate text-sm font-medium text-gray-900">

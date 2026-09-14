@@ -1,3 +1,5 @@
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { COLUMN_LABELS, type TicketStatus, type TicketWithMeta } from '@/shared/types';
 import { TicketCard } from './TicketCard';
 
@@ -5,9 +7,11 @@ type ColumnProps = {
   status: TicketStatus;
   tickets: TicketWithMeta[];
   onTicketClick?: (ticket: TicketWithMeta) => void;
+  /** DndContext 밖(단위 테스트 등)에서는 드롭/정렬을 끈다 */
+  sortable?: boolean;
 };
 
-export const Column = ({ status, tickets, onTicketClick }: ColumnProps) => (
+const ColumnBody = ({ status, tickets, onTicketClick, sortable }: Required<Pick<ColumnProps, 'status' | 'tickets' | 'sortable'>> & Pick<ColumnProps, 'onTicketClick'>) => (
   <section
     data-testid="column"
     data-status={status}
@@ -32,10 +36,42 @@ export const Column = ({ status, tickets, onTicketClick }: ColumnProps) => (
       <ul className="flex flex-col gap-2">
         {tickets.map((ticket) => (
           <li key={ticket.id}>
-            <TicketCard ticket={ticket} onClick={() => onTicketClick?.(ticket)} />
+            <TicketCard
+              ticket={ticket}
+              sortable={sortable}
+              onClick={() => onTicketClick?.(ticket)}
+            />
           </li>
         ))}
       </ul>
     )}
   </section>
 );
+
+export const Column = ({ status, tickets, onTicketClick, sortable = false }: ColumnProps) => {
+  // 칼럼 자체를 드롭 대상으로 등록한다 (빈 칼럼에도 떨어뜨릴 수 있어야 한다)
+  const { setNodeRef, isOver } = useDroppable({ id: status, disabled: !sortable });
+
+  const body = (
+    <ColumnBody
+      status={status}
+      tickets={tickets}
+      onTicketClick={onTicketClick}
+      sortable={sortable}
+    />
+  );
+
+  if (!sortable) return body;
+
+  return (
+    <div
+      ref={setNodeRef}
+      data-over={String(isOver)}
+      className={isOver ? 'rounded-lg ring-2 ring-blue-400' : undefined}
+    >
+      <SortableContext items={tickets.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+        {body}
+      </SortableContext>
+    </div>
+  );
+};
